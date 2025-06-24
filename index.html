@@ -763,8 +763,8 @@
                         ocrWorker = await Tesseract.createWorker({
                             // Explicitly set workerPath for consistency.
                             workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
-                            // Updated langPath to a stable Tesseract CDN using unpkg
-                            langPath: 'https://unpkg.com/tesseract.js-lang/',
+                            // Updated langPath to a local path within the repo
+                            langPath: './tessdata/', // This is the crucial change
                             logger: m => {
                                 if (m.status && m.progress !== undefined) {
                                     if (m.status === 'loading tesseract core') {
@@ -969,9 +969,10 @@
             ocrStatusDisplay.textContent = 'Initializing OCR engine (core files)...';
             try {
                 ocrWorker = await Tesseract.createWorker({
+                    // Set workerPath relative to the root if your worker.min.js is there, or absolute if on CDN
                     workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
-                    // Updated langPath to a stable Tesseract CDN using unpkg
-                    langPath: 'https://unpkg.com/tesseract.js-lang/',
+                    // Updated langPath to a local path within the repo's tessdata folder
+                    langPath: './tessdata/', // IMPORTANT: This must match the path in your repo
                     logger: m => {
                         if (m.status && m.progress !== undefined) {
                             if (m.status === 'loading tesseract core') {
@@ -993,8 +994,6 @@
                 ocrStatusDisplay.textContent = 'OCR Engine ready. Loading default PDF...';
 
                 // Automatically load the specified PDF from the URL
-                // IMPORTANT: Ensure this is YOUR actual public raw GitHub URL for your PDF!
-                // It should start with https://raw.githubusercontent.com/...
                 const defaultPdfUrl = 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/main/ABS%201886.pdf';
                 
                 // Add a check to ensure the default URL is not the placeholder before trying to load
