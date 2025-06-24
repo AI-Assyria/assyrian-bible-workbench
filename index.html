@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assyrian Keyboard & PDF Workbench</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Syriac Scripts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Syriac+Eastern&family=Noto+Sans+Syriac+Estrangela&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the Assyrian font and keyboard layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+
+        /* Base styles for all Assyrian text elements */
+        .assyrian-text, .assyrian-letter {
+            /* Fallback to generic Syriac fonts if Noto Sans fails to load */
+            font-family: 'Noto Sans Syriac Estrangela', 'Noto Sans Syriac Eastern', 'Estrangelo Edessa', 'Segoe UI Historic', sans-serif;
+        }
+
+        /* Specific font for Estrangela script */
+        .estrangela-font {
+            font-family: 'Noto Sans Syriac Estrangela', 'Estrangelo Edessa', 'Segoe UI Historic', sans-serif;
+        }
+
+        /* Specific font for Madnhaya (Eastern) script */
+        .madnhaya-font {
+            font-family: 'Noto Sans Syriac Eastern', 'Segoe UI Historic', sans-serif;
+        }
+
+        /* Styling for the input and output areas */
+        .input-area, .output-area {
+            min-height: 120px;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            background-color: #ffffff;
+            font-size: 1.25rem; /* Larger text for readability */
+            line-height: 1.75;
+            overflow-y: auto; /* Enable scrolling for long text */
+            text-align: right; /* Ensure text aligns right for RTL */
+        }
+
+        /* PDF Viewer Canvas */
+        #pdf-render-canvas {
+            border: 1px solid #d1d5db;
+            background-color: #ffffff;
+            display: block; /* Remove extra space below canvas */
+            margin: 0 auto; /* Center the canvas */
+            max-width: 100%; /* Ensure responsiveness */
+            height: auto; /* Maintain aspect ratio */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+        }
+
+        /* Hidden canvas for OCR processing */
+        #ocr-hidden-canvas {
+            display: none;
+        }
+
+        /* Canvas for saving text as image (can be hidden or styled minimally) */
+        #output-canvas {
+            border: 1px solid #d1d5db;
+            margin-top: 1rem;
+            display: block; /* Ensures it takes full width */
+            max-width: 100%;
+            height: auto;
+            background-color: #ffffff;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            /* Initially hide it, only show on save or via specific button */
+            display: none;
+        }
+
+
+        /* Keyboard button styling */
+        .keyboard-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+            margin: 0.25rem;
+            background-color: #e5e7eb; /* Light gray button */
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            min-width: 60px; /* Ensure buttons are not too narrow */
+            height: 70px; /* Fixed height for consistency */
+        }
+
+        .keyboard-btn:hover:not(:disabled) {
+            background-color: #d1d5db; /* Darker gray on hover */
+            transform: translateY(-1px);
+        }
+
+        .keyboard-btn:active:not(:disabled) {
+            background-color: #9ca3af; /* Even darker on active */
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .keyboard-btn:disabled {
+            background-color: #f9fafb; /* Very light gray for disabled */
+            color: #9ca3af; /* Faded text for disabled */
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .assyrian-letter {
+            font-size: 1.8rem; /* Larger Assyrian character */
+            font-weight: bold;
+            color: #1f2937; /* Dark text */
+        }
+
+        .latin-letter {
+            font-size: 0.9rem; /* Smaller Latin transliteration */
+            color: #6b7280; /* Gray text */
+            margin-top: 0.2rem;
+        }
+
+        /* Base layout for the keyboard buttons - default LTR, overridden by JS for RTL Assyrian layout */
+        #keyboard {
+            display: flex; /* Ensure flex properties apply */
+            flex-wrap: wrap;
+            justify-content: center;
+            /* Default to LTR. JS will add/remove flex-row-reverse as needed */
+            flex-direction: row;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Assyrian Keyboard & PDF Workbench</h1>
+
+        <!-- PDF Upload Section -->
+        <div class="mb-8 p-4 bg-gray-50 rounded-lg shadow-inner">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">PDF Reader & OCR</h2>
+            <div class="mb-4">
+                <label for="pdf-upload" class="block text-lg font-medium text-gray-700 mb-2">Upload Assyrian PDF:</label>
+                <input type="file" id="pdf-upload" accept="application/pdf" class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100"/>
+            </div>
+
+            <div class="flex justify-center items-center gap-4 mb-4">
+                <button id="prev-page-btn" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Previous Page</button>
+                <span id="page-num-display" class="text-lg font-medium text-gray-700">Page: - / -</span>
+                <button id="next-page-btn" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">Next Page</button>
+            </div>
+            <div id="ocr-status-display" class="text-center text-sm font-medium text-blue-700 mb-4"></div>
+
+            <!-- PDF Rendering Canvas -->
+            <canvas id="pdf-render-canvas" class="mb-6"></canvas>
+            <!-- Hidden canvas for OCR processing (not displayed to user) -->
+            <canvas id="ocr-hidden-canvas"></canvas>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-3">Extracted Text (from PDF/OCR):</h3>
+            <div id="pdf-extracted-text" class="output-area text-gray-700 mb-4" dir="rtl">
+                <!-- Extracted text will appear here -->
+                No PDF loaded or no text extracted for this page yet.
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-3">Transliteration (from PDF/OCR):</h3>
+            <div id="pdf-transliterated-text" class="output-area text-gray-600" dir="ltr">
+                <!-- Transliterated text will appear here -->
+                No PDF loaded or no text extracted for this page yet.
+            </div>
+        </div>
+
+        <!-- Keyboard Section -->
+        <div class="mb-4">
+            <label for="script-select" class="block text-lg font-medium text-gray-700 mb-2">Select Script:</label>
+            <select id="script-select" class="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-lg">
+                <option value="estrangela">Estrangelā (Classical)</option>
+                <option value="madnhaya">Maḏnḥāyā (Eastern)</option>
+            </select>
+        </div>
+
+        <div class="mb-6">
+            <label for="keyboard-layout-select" class="block text-lg font-medium text-gray-700 mb-2">Keyboard Layout:</label>
+            <select id="keyboard-layout-select" class="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-lg">
+                <option value="assyrian">Assyrian Letters</option>
+                <option value="qwerty">QWERTY (Latin Mapped)</option>
+            </select>
+        </div>
+
+        <div class="mb-6">
+            <label for="assyrian-input" class="block text-lg font-medium text-gray-700 mb-2">Type Assyrian Here:</label>
+            <!-- Added dir="rtl" for Right-to-Left text direction -->
+            <textarea id="assyrian-input" class="input-area w-full focus:ring-blue-500 focus:border-blue-500 resize-y" placeholder="Start typing..." dir="rtl"></textarea>
+            <button id="save-image-btn" class="mt-4 px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700">Save Text as Image</button>
+            <canvas id="output-canvas"></canvas> <!-- Canvas for drawing and saving text as image -->
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">Transliteration (Manual Input):</h2>
+                <div id="transliteration" class="output-area text-gray-600"></div>
+            </div>
+            <div>
+                <h2 class="text-xl font-semibold text-gray-800 mb-3">Assyrian Output (Manual Input):</h2>
+                <!-- Added dir="rtl" for Right-to-Left text direction -->
+                <div id="output" class="output-area assyrian-text text-gray-800" dir="rtl"></div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-3">Assyrian Keyboard:</h2>
+            <div id="keyboard" class="flex flex-wrap justify-center bg-gray-100 p-4 rounded-lg shadow-inner">
+                <!-- Keyboard buttons will be rendered here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF.js library includes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- Tesseract.js library includes - Updated to v4.1.1 with explicit paths for consistency -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+    <script>
+        // Set the workerSrc for pdf.js to load its worker script
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        // Get references to the DOM elements
+        const input = document.getElementById('assyrian-input');
+        const output = document.getElementById('output');
+        const scriptSelect = document.getElementById('script-select');
+        const keyboardLayoutSelect = document.getElementById('keyboard-layout-select');
+        const keyboardDiv = document.getElementById('keyboard');
+        const transliterationDiv = document.getElementById('transliteration');
+
+        // PDF elements
+        const pdfUploadInput = document.getElementById('pdf-upload');
+        const prevPageBtn = document.getElementById('prev-page-btn');
+        const nextPageBtn = document.getElementById('next-page-btn');
+        const pageNumDisplay = document.getElementById('page-num-display');
+        const pdfRenderCanvas = document.getElementById('pdf-render-canvas');
+        const ocrHiddenCanvas = document.getElementById('ocr-hidden-canvas'); // Hidden canvas for OCR
+        const pdfExtractedTextDiv = document.getElementById('pdf-extracted-text');
+        const pdfTransliteratedTextDiv = document.getElementById('pdf-transliterated-text');
+        const ocrStatusDisplay = document.getElementById('ocr-status-display');
+        const canvasContext = pdfRenderCanvas.getContext('2d');
+        const ocrCanvasContext = ocrHiddenCanvas.getContext('2d'); // Context for hidden OCR canvas
+
+        // Image Saving elements
+        const saveImageBtn = document.getElementById('save-image-btn');
+        const outputCanvas = document.getElementById('output-canvas');
+        const outputCanvasCtx = outputCanvas.getContext('2d');
+
+
+        // PDF variables
+        let pdfDoc = null; // Stores the loaded PDF document
+        let currentPageNum = 1; // Current page number being displayed
+
+        // Tesseract.js Worker
+        let ocrWorker = null; // Declare a variable to hold the Tesseract.js worker instance
+
+        // Core Assyrian letters
+        const AshurayaLetters = [
+            'ܐ', 'ܒ', 'ܓ', 'ܕ', 'ܗ', 'ܘ', 'ܙ', 'ܚ', 'ܛ', 'ܝ', 'ܟ',
+            'ܠ', 'ܡ', 'ܢ', 'ܣ', 'ܥ', 'ܦ', 'ܨ', 'ܩ', 'ܪ', 'ܫ', 'ܬ'
+        ];
+
+        // Eastern Syriac vowels and diacritics
+        const vowelsAndDiacritics = [
+            'ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'
+        ];
+
+        // Tooltips for diacritics
+        const diacriticTooltips = {
+            'ܵ': 'ā – zqāp̄ā (long a)',
+            'ܲ': 'ă – pṯāḥā (short a)',
+            'ܸ': 'e – rḇāṣā ʾărīḵā',
+            'ܹ': 'ē – rḇāṣā karyā',
+            'ܼ': 'ī – ḥḇāṣā',
+            'ܿ': 'ō – ʿṣāṣā rwīḥā',
+            'ܽ': 'ū – ʿṣāṣā ʾălīṣā',
+            '݂': "' – quššāyā (hard)",
+            '݄': '· – rukkākhā (soft)'
+        };
+
+        // Map for transliteration (for outputting transliterated text)
+        const transliterationMap = {
+            'ܐ': 'ʾ', 'ܒ': 'b', 'ܓ': 'g', 'ܕ': 'd', 'ܗ': 'h', 'ܘ': 'w',
+            'ܙ': 'z', 'ܚ': 'ḥ', 'ܛ': 'ṭ', 'ܝ': 'y', 'ܟ': 'k', 'ܠ': 'l',
+            'ܡ': 'm', 'ܢ': 'n', 'ܣ': 's', 'ܥ': 'ʿ', 'ܦ': 'p', 'ܨ': 'ṣ',
+            'ܩ': 'q', 'ܪ': 'r', 'ܫ': 'š', 'ܬ': 't',
+            'ܵ': 'ā', 'ܲ': 'ă', 'ܸ': 'e', 'ܹ': 'ē', 'ܼ': 'ī', 'ܿ': 'ō', 'ܽ': 'ū',
+            '݂': "'", '݄': ''
+        };
+
+        // For now, Madnhaya and Estrangela letters are the same for the base set
+        const madnhayaLetters = AshurayaLetters;
+        const estrangelaLetters = AshurayaLetters;
+
+        // Map letters to allowed diacritics. This is crucial for correct input.
+        const validDiacriticsMap = {
+            'ܐ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܿ', 'ܽ'],
+            'ܒ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'],
+            'ܓ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'],
+            'ܕ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'],
+            'ܗ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܘ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܙ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܚ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܛ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܝ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܟ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'],
+            'ܠ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܡ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܢ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܣ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܥ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܦ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'],
+            'ܨ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܩ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܪ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܫ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
+            'ܬ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄']
+        };
+
+        // Mapping of physical keyboard keys to Assyrian characters and diacritics
+        const physicalKeyToAssyrianMap = {
+            // Base Letters (approximate phonetic or common layouts)
+            'q': 'ܩ', 'w': 'ܘ', 'e': 'ܐ', 'r': 'ܪ', 't': 'ܬ', 'y': 'ܝ', 'u': 'ܘ', 'i': 'ܝ', 'o': 'ܘ', 'p': 'ܦ',
+            'a': 'ܐ', 's': 'ܣ', 'd': 'ܕ', 'f': 'ܫ', 'g': 'ܓ', 'h': 'ܗ', 'j': 'ܚ', 'k': 'ܟ', 'l': 'ܠ',
+            'z': 'ܙ', 'x': 'ܨ', 'c': 'ܥ', 'v': 'ܒ', 'b': 'ܒ', 'n': 'ܢ', 'm': 'ܡ',
+
+            // Diacritics (using Shift + a key, or specific symbols/numbers)
+            // These mappings are chosen to be relatively intuitive for QWERTY users.
+            'A': 'ܵ', 'S': 'ܲ', 'D': 'ܸ', 'F': 'ܹ', 'G': 'ܼ', 'H': 'ܿ', 'J': 'ܽ', 'K': '݂', 'L': '݄',
+
+            // Shift + Number mappings for diacritics/vowels (preferred for clarity)
+            '1': 'ܵ', // Shift+1 for Zqapa (ā)
+            '2': 'ܲ', // Shift+2 for Ptaha (ă)
+            '3': 'ܸ', // Shift+3 for Rbasa Arika (e)
+            '4': 'ܹ', // Shift+4 for Rbasa Karya (ē)
+            '5': 'ܼ', // Shift+5 for Hbasa (ī)
+            '6': 'ܿ', // Shift+6 for Asasa Rwiha (ō)
+            '7': 'ܽ', // Shift+7 for Asasa Alisa (ū)
+            '8': '݂', // Shift+8 for Qushaya (hard mark)
+            '9': '݄', // Shift+9 for Rukkakha (soft mark
+
+            // Common non-alphabetic keys
+            ' ': ' ', // Space
+            'Enter': '\n', // New line
+        };
+
+        // QWERTY keyboard rows for display on the virtual keyboard
+        const qwertyDisplayRows = [
+            ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+            ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+            ['z', 'x', 'c', 'v', 'b', 'n', 'm'],
+        ];
+
+
+        /**
+         * Renders the virtual keyboard based on the selected script and layout.
+         * @param {string} script - The selected script ('madnhaya' or 'estrangela') for font.
+         * @param {string} layout - The selected keyboard layout ('assyrian' or 'qwerty').
+         */
+        function renderKeyboard(script, layout) {
+            keyboardDiv.innerHTML = ''; // Clear existing keyboard buttons
+
+            // Adjust keyboard direction based on layout
+            if (layout === 'qwerty') {
+                keyboardDiv.classList.remove('flex-row-reverse');
+                keyboardDiv.classList.add('flex-row'); // Ensure LTR for QWERTY
+            } else {
+                keyboardDiv.classList.add('flex-row-reverse'); // Ensure RTL for Assyrian letters
+                keyboardDiv.classList.remove('flex-row');
+            }
+
+            // If QWERTY layout is selected
+            if (layout === 'qwerty') {
+                qwertyDisplayRows.forEach(row => {
+                    const rowDiv = document.createElement('div');
+                    // Row div also explicitly LTR
+                    rowDiv.classList.add('flex', 'flex-wrap', 'justify-center', 'mb-2', 'flex-row');
+                    row.forEach(key => {
+                        const btn = document.createElement('button');
+                        btn.classList.add('keyboard-btn');
+
+                        const topSpan = document.createElement('div');
+                        // Display the Latin key (uppercase for clarity)
+                        topSpan.textContent = key.toUpperCase();
+                        topSpan.className = 'latin-letter';
+
+                        const bottomSpan = document.createElement('div');
+                        // Display the mapped Assyrian character, if available
+                        // Use the physicalKeyToAssyrianMap to get the corresponding Assyrian char
+                        // Default to empty string if no mapping.
+                        bottomSpan.textContent = physicalKeyToAssyrianMap[key.toLowerCase()] || '';
+                        bottomSpan.className = 'assyrian-letter ' + script + '-font'; // Apply script font to Assyrian char
+
+                        btn.appendChild(topSpan);
+                        btn.appendChild(bottomSpan);
+
+                        // Onclick should insert the mapped Assyrian character
+                        // If no direct Assyrian mapping, insert the Latin character itself.
+                        const charToInsert = physicalKeyToAssyrianMap[key.toLowerCase()] || key;
+                        // Mark as base character true, as it's a primary letter in this context
+                        btn.onclick = () => insertAtCursor(charToInsert, true);
+                        rowDiv.appendChild(btn);
+                    });
+                    keyboardDiv.appendChild(rowDiv);
+                });
+                // Add diacritics row explicitly for QWERTY layout using numbers for clarity
+                const diacriticQwertyRowDiv = document.createElement('div');
+                diacriticQwertyRowDiv.classList.add('flex', 'flex-wrap', 'justify-center', 'mt-2', 'flex-row'); // LTR for QWERTY diacritic row
+
+                // Add 1-9 keys with shiftable diacritics
+                for (let i = 1; i <= 9; i++) {
+                    const numKey = String(i); // "1", "2", etc.
+                    // The actual diacritic character is mapped to `physicalKeyToAssyrianMap[numKey]` when shifted.
+                    // For display on the button, we show the diacritic that would be produced.
+                    const mappedDiacritic = physicalKeyToAssyrianMap[numKey];
+
+                    const btn = document.createElement('button');
+                    btn.classList.add('keyboard-btn');
+
+                    const topSpan = document.createElement('div');
+                    topSpan.textContent = numKey; // Display the number
+                    topSpan.className = 'latin-letter';
+
+                    const bottomSpan = document.createElement('div');
+                    // Display the mapped diacritic if it exists
+                    bottomSpan.textContent = mappedDiacritic || '';
+                    bottomSpan.className = 'assyrian-letter ' + script + '-font';
+
+                    btn.appendChild(topSpan);
+                    btn.appendChild(bottomSpan);
+
+                    // On click, insert the *diacritic* if mapped, otherwise the number itself.
+                    // Important: When clicked, these are diacritics, so isBase should be false.
+                    btn.onclick = () => insertAtCursor(mappedDiacritic || numKey, false);
+                    diacriticQwertyRowDiv.appendChild(btn);
+                }
+                keyboardDiv.appendChild(diacriticQwertyRowDiv);
+
+
+            } else { // Default Assyrian letter layout
+                const letters = script === 'madnhaya' ? madnhayaLetters : estrangelaLetters;
+                letters.forEach(letter => {
+                    const btn = document.createElement('button');
+                    btn.classList.add('keyboard-btn');
+                    btn.classList.add(script + '-font'); // Apply script-specific class
+
+                    const topSpan = document.createElement('div');
+                    topSpan.textContent = letter;
+                    topSpan.className = 'assyrian-letter';
+
+                    const bottomSpan = document.createElement('div');
+                    bottomSpan.textContent = transliterationMap[letter] || '';
+                    bottomSpan.className = 'latin-letter';
+
+                    btn.appendChild(topSpan);
+                    btn.appendChild(bottomSpan);
+
+                    btn.onclick = () => insertAtCursor(letter, true);
+                    keyboardDiv.appendChild(btn);
+                });
+            }
+
+            // Create a container specifically for diacritic buttons (always RTL for Assyrian context)
+            const diacriticContainer = document.createElement('div');
+            diacriticContainer.id = 'diacritic-container';
+            diacriticContainer.classList.add('flex', 'flex-wrap', 'justify-center', 'mt-4', 'flex-row-reverse');
+            keyboardDiv.appendChild(diacriticContainer);
+
+            renderDiacriticButtons();
+        }
+
+        /**
+         * Renders diacritic buttons, enabling/disabling them based on the character
+         * immediately preceding the cursor in the input field.
+         */
+        function renderDiacriticButtons() {
+            const diacriticContainer = document.getElementById('diacritic-container');
+            if (!diacriticContainer) return;
+
+            diacriticContainer.innerHTML = '';
+
+            const cursorPos = input.selectionStart;
+            const value = input.value;
+
+            let baseCharIndex = cursorPos - 1;
+            while (baseCharIndex >= 0 && vowelsAndDiacritics.includes(value[baseCharIndex])) {
+                baseCharIndex--;
+            }
+            const baseChar = baseCharIndex >= 0 ? value[baseCharIndex] : '';
+
+            let hasDiacriticImmediatelyAfterBase = false;
+            // Check if there's *any* diacritic directly after the base character, to disable adding *another* primary diacritic.
+            // This is a common rule in many Syriac typing systems to prevent visually ambiguous stacking.
+            if (baseCharIndex >= 0 && value.length > baseCharIndex + 1 && vowelsAndDiacritics.includes(value[baseCharIndex + 1])) {
+                 // Check if the character at the current cursor position is *not* a diacritic
+                 // This allows inserting diacritics into an existing sequence (e.g., 'word' + diacritic1 + '|' + diacritic2)
+                 // But prevents 'word' + '|' + diacritic1 + diacritic2
+                if (!vowelsAndDiacritics.includes(value[cursorPos])) {
+                    hasDiacriticImmediatelyAfterBase = true;
+                }
+            }
+
+
+            const allowed = validDiacriticsMap[baseChar] || vowelsAndDiacritics;
+            const currentScript = scriptSelect.value; // Get current script for font application
+
+            vowelsAndDiacritics.forEach(mark => {
+                const btn = document.createElement('button');
+                btn.textContent = mark;
+                btn.classList.add('keyboard-btn', currentScript + '-font'); // Apply font class
+                btn.title = diacriticTooltips[mark] || '';
+
+                // Disable button if validation fails
+                if (hasDiacriticImmediatelyAfterBase || !allowed.includes(mark)) {
+                    btn.disabled = true;
+                } else {
+                    btn.disabled = false;
+                    btn.onclick = () => insertAtCursor(mark);
+                }
+                diacriticContainer.appendChild(btn);
+            });
+        }
+
+        /**
+         * Inserts a character at the current cursor position in the input field.
+         * Handles logic for preventing invalid diacritic combinations.
+         * @param {string} char - The character to insert.
+         * @param {boolean} isBase - True if the character is a base Assyrian letter, false for diacritics.
+         */
+        function insertAtCursor(char, isBase = false) {
+            const cursorPos = input.selectionStart;
+            const value = input.value;
+
+            // Diacritic validation logic
+            // This logic prevents a new diacritic from being inserted if the direct position after the
+            // base character already has a diacritic and the cursor is immediately after the base.
+            if (!isBase && vowelsAndDiacritics.includes(char)) { // Only apply validation if the char itself is a diacritic
+                let baseCharIndex = cursorPos - 1;
+                // Move backwards to find the actual base letter, skipping any diacritics already there
+                while (baseCharIndex >= 0 && vowelsAndDiacritics.includes(value[baseCharIndex])) {
+                    baseCharIndex--;
+                }
+                if (baseCharIndex < 0) {
+                    // No base character found to attach the diacritic to.
+                    return;
+                }
+
+                const baseChar = value[baseCharIndex];
+
+                // If the character immediately after the baseChar (at baseCharIndex + 1) is already a diacritic,
+                // AND the cursor is exactly at that position (baseCharIndex + 1),
+                // then we prevent adding another diacritic here to avoid visual issues/incorrect stacking.
+                // This typically means you can only add one primary vowel/diacritic *immediately* after a letter.
+                if (value.length > baseCharIndex + 1 && vowelsAndDiacritics.includes(value[baseCharIndex + 1]) && cursorPos === (baseCharIndex + 1)) {
+                    // If the character at cursor position is *not* a diacritic, it means
+                    // we're trying to insert a new diacritic where one already exists.
+                    // This handles cases like: 'letter|diacritic' trying to insert another diacritic.
+                    // If the cursor is 'letter diacritic|', then it's fine to insert another.
+                    if (!vowelsAndDiacritics.includes(value[cursorPos])) {
+                         // Only prevent if attempting to insert another diacritic right after the first one
+                        return;
+                    }
+                }
+
+                // Check if the diacritic is allowed on this specific base letter
+                if (validDiacriticsMap[baseChar] && !validDiacriticsMap[baseChar].includes(char)) {
+                    return;
+                }
+            }
+
+
+            const before = value.slice(0, cursorPos);
+            const after = value.slice(cursorPos);
+            input.value = before + char + after;
+
+            input.focus();
+            input.selectionStart = input.selectionEnd = cursorPos + char.length;
+
+            updateOutput();
+        }
+
+        /**
+         * Updates the output displays (Assyrian text and transliteration)
+         * and re-renders diacritic buttons based on the current input.
+         */
+        function updateOutput() {
+            const script = scriptSelect.value;
+            // Apply script-specific font class
+            input.className = `input-area w-full focus:ring-blue-500 focus:border-blue-500 resize-y ${script}-font`;
+            output.className = `output-area assyrian-text text-gray-800 ${script}-font`;
+            output.textContent = input.value;
+            transliterationDiv.textContent = transliterate(input.value);
+
+            renderDiacriticButtons();
+        }
+
+        /**
+         * Transliterates the given Assyrian text into Latin characters.
+         * @param {string} text - The Assyrian text to transliterate.
+         * @returns {string} The transliterated text.
+         */
+        function transliterate(text) {
+            let result = '';
+            for (const char of text) {
+                result += transliterationMap[char] || char;
+            }
+            return result;
+        }
+
+        // --- PDF.js Functions ---
+
+        /**
+         * Loads a PDF document from a file and renders the first page.
+         * @param {File} file - The PDF file to load.
+         */
+        async function loadPdf(file) {
+            const fileReader = new FileReader();
+            fileReader.onload = async () => {
+                const typedarray = new Uint8Array(fileReader.result);
+                try {
+                    pdfDoc = await pdfjsLib.getDocument({ data: typedarray }).promise;
+                    currentPageNum = 1;
+                    renderPage(currentPageNum);
+                    // Enable navigation buttons
+                    prevPageBtn.disabled = true; // First page, so previous is disabled
+                    nextPageBtn.disabled = pdfDoc.numPages <= 1; // Disable next if only one page
+                } catch (error) {
+                    console.error('Error loading PDF:', error);
+                    // Using a custom message box instead of alert()
+                    const errorMessage = document.createElement('div');
+                    errorMessage.textContent = 'Failed to load PDF. Please ensure it is a valid PDF file.';
+                    errorMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: #f8d7da; color: #721c24; padding: 10px 20px; border-radius: 5px; border: 1px solid #f5c6cb; z-index: 1000;';
+                    document.body.appendChild(errorMessage);
+                    setTimeout(() => errorMessage.remove(), 5000); // Remove after 5 seconds
+
+                    pdfDoc = null;
+                    currentPageNum = 1;
+                    pageNumDisplay.textContent = 'Page: - / -';
+                    pdfRenderCanvas.width = 0;
+                    pdfRenderCanvas.height = 0;
+                    pdfExtractedTextDiv.textContent = 'Failed to load PDF.';
+                    pdfTransliteratedTextDiv.textContent = 'Failed to load PDF.';
+                    prevPageBtn.disabled = true;
+                    nextPageBtn.disabled = true;
+                }
+            };
+            fileReader.readAsArrayBuffer(file);
+        }
+
+        /**
+         * Renders a specific page of the loaded PDF.
+         * Attempts to extract text first, then falls back to OCR if no text is found.
+         * @param {number} pageNumber - The page number to render.
+         */
+        async function renderPage(pageNumber) {
+            if (!pdfDoc) return;
+
+            currentPageNum = pageNumber;
+            pageNumDisplay.textContent = `Page: ${currentPageNum} / ${pdfDoc.numPages}`;
+
+            // Update button states
+            prevPageBtn.disabled = currentPageNum <= 1;
+            nextPageBtn.disabled = currentPageNum >= pdfDoc.numPages;
+
+            pdfExtractedTextDiv.textContent = 'Extracting text...';
+            pdfTransliteratedTextDiv.textContent = 'Transliterating...';
+            ocrStatusDisplay.textContent = ''; // Clear previous OCR status
+
+            try {
+                const page = await pdfDoc.getPage(pageNumber);
+                const viewport = page.getViewport({ scale: 2.0 }); // Increased scale for better OCR quality
+
+                // --- Render PDF to main canvas (for display) ---
+                pdfRenderCanvas.height = viewport.height;
+                pdfRenderCanvas.width = viewport.width;
+                const renderContext = {
+                    canvasContext: canvasContext,
+                    viewport: viewport
+                };
+                await page.render(renderContext).promise;
+
+                // --- Attempt to extract text layer ---
+                const textContent = await page.getTextContent();
+                let pageText = '';
+
+                if (textContent.items.length > 0) {
+                    // Filter out empty strings and join
+                    pageText = textContent.items.map(item => item.str).filter(str => str.trim() !== '').join(' ');
+                }
+
+                // Heuristic check: if the extracted text is empty or predominantly Latin characters, proceed with OCR.
+                const containsSyriacCharacters = /[ܐ-ܬ݀-ݎ]/g.test(pageText); // Basic check for Syriac Unicode range
+                const isMostlyLatin = /[a-zA-Z0-9]/.test(pageText.trim()) && !containsSyriacCharacters;
+
+
+                if (pageText.trim() !== '' && containsSyriacCharacters && !isMostlyLatin) {
+                    // Found text, and it appears to be Syriac (not just Latin characters)
+                    pdfExtractedTextDiv.textContent = pageText;
+                    pdfTransliteratedTextDiv.textContent = transliterate(pageText);
+                    ocrStatusDisplay.textContent = 'Text extracted from PDF layer.';
+                } else {
+                    // No selectable text, or extracted text seems to be Latin/garbage. Attempt OCR.
+                    ocrStatusDisplay.textContent = 'No digital text layer or non-Latin text found. Running OCR...';
+                    pdfExtractedTextDiv.textContent = 'Running OCR... (this may take a moment)';
+                    pdfTransliteratedTextDiv.textContent = 'Running OCR...';
+
+                    // --- Render PDF to hidden canvas (for OCR) ---
+                    ocrHiddenCanvas.height = viewport.height;
+                    ocrHiddenCanvas.width = viewport.width;
+                    const ocrRenderContext = {
+                        canvasContext: ocrCanvasContext,
+                        viewport: viewport
+                    };
+                    await page.render(ocrRenderContext).promise;
+
+                    // Ensure OCR worker is ready
+                    if (!ocrWorker) {
+                        ocrStatusDisplay.textContent = 'Loading OCR engine (core files)...';
+                        ocrWorker = await Tesseract.createWorker({
+                            // Explicitly set workerPath for consistency.
+                            workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
+                            // IMPORTANT: Removed corePath. Tesseract.js should infer this from workerPath.
+                            // This often resolves 'DataCloneError' and 404s for tesseract-core-simd.wasm.js
+                            langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/syc@1.0.0/4.0.0_best_int/', // Use a stable CDN path
+                            logger: m => {
+                                if (m.status && m.progress !== undefined) {
+                                    if (m.status === 'loading tesseract core') {
+                                        ocrStatusDisplay.textContent = `OCR Core: ${Math.round(m.progress * 100)}% loaded`;
+                                    } else if (m.status === 'initializing tesseract') {
+                                        ocrStatusDisplay.textContent = `OCR Initializing: ${Math.round(m.progress * 100)}%`;
+                                    } else if (m.status === 'loading language traineddata') {
+                                        ocrStatusDisplay.textContent = `OCR Language Data: ${Math.round(m.progress * 100)}% loaded`;
+                                    } else {
+                                        ocrStatusDisplay.textContent = `OCR: ${m.status} (${Math.round(m.progress * 100)}%)`;
+                                    }
+                                }
+                            }
+                        });
+                        ocrStatusDisplay.textContent = 'OCR Engine: Loading language data...';
+                        await ocrWorker.loadLanguage('syc');
+                        ocrStatusDisplay.textContent = 'OCR Engine: Initializing language...';
+                        await ocrWorker.initialize('syc');
+                        ocrStatusDisplay.textContent = 'OCR Engine ready.';
+                    }
+
+                    console.log('Attempting OCR with canvas:', ocrHiddenCanvas); // Added for debugging
+                    // --- Perform OCR using Tesseract.js worker ---
+                    const { data: { text } } = await ocrWorker.recognize(ocrHiddenCanvas);
+
+                    pageText = text.trim();
+
+                    pdfExtractedTextDiv.textContent = pageText || 'OCR found no text or failed to recognize.';
+                    pdfTransliteratedTextDiv.textContent = transliterate(pageText);
+                    ocrStatusDisplay.textContent = pageText ? 'OCR complete.' : 'OCR complete, no text found.';
+                }
+
+            } catch (error) {
+                console.error('Error rendering page or extracting text/OCR:', error);
+                pdfExtractedTextDiv.textContent = 'Error processing page.';
+                pdfTransliteratedTextDiv.textContent = 'Error processing page.';
+                // Enhanced error message for user
+                let userMessage = `Error during PDF processing or OCR: ${error.name}: ${error.message}.`;
+                if (error.name === 'NetworkError' || error.message.includes('Failed to fetch') || error.message.includes('Can not load')) {
+                    userMessage += ' This often happens if the page is not served by a local web server (e.g., you opened it directly from your file system). Please ensure you are using a local server (like Python\'s http.server) and try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) after clearing your browser\'s cache.';
+                } else if (error.name === 'DataCloneError') {
+                     userMessage += ' This suggests an issue with the Web Worker. Please try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) and clear your browser\'s cache to ensure consistent Tesseract.js component loading.';
+                }
+                ocrStatusDisplay.textContent = userMessage;
+            }
+        }
+
+        // --- Image Saving Function ---
+        /**
+         * Saves the current text from the manual input area as a PNG image.
+         */
+        function saveInputTextAsImage() {
+            const textToSave = input.value;
+            if (!textToSave.trim()) {
+                const infoMessage = document.createElement('div');
+                infoMessage.textContent = 'Please type some Assyrian text to save as an image.';
+                infoMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: #fff3cd; color: #664d03; padding: 10px 20px; border-radius: 5px; border: 1px solid #ffecb5; z-index: 1000;';
+                document.body.appendChild(infoMessage);
+                setTimeout(() => infoMessage.remove(), 3000);
+                return;
+            }
+
+            const currentScript = scriptSelect.value;
+            // Use the correct font family names as defined in CSS
+            const fontName = currentScript === 'madnhaya' ? 'Noto Sans Syriac Eastern' : 'Noto Sans Syriac Estrangela';
+            const fontSize = 80; // Adjust as needed
+            const padding = 20; // Padding around the text
+
+            // Measure text to set canvas dimensions dynamically
+            outputCanvasCtx.font = `${fontSize}px "${fontName}"`;
+            const textMetrics = outputCanvasCtx.measureText(textToSave);
+            const textWidth = textMetrics.width;
+            const textHeight = fontSize; // Approximate height
+
+            // Set canvas dimensions
+            outputCanvas.width = textWidth + (padding * 2);
+            outputCanvas.height = textHeight + (padding * 2);
+
+            // Redraw content with new dimensions
+            outputCanvasCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+            outputCanvasCtx.font = `${fontSize}px "${fontName}"`;
+            outputCanvasCtx.textAlign = 'center';
+            outputCanvasCtx.textBaseline = 'middle';
+            outputCanvasCtx.fillStyle = '#000'; // Black text
+            // Draw text, adjusted for RTL and centering
+            outputCanvasCtx.fillText(textToSave, outputCanvas.width / 2, outputCanvas.height / 2);
+
+            // Create a download link
+            const link = document.createElement('a');
+            link.download = `assyrian-text-${encodeURIComponent(textToSave.substring(0, 10))}.png`; // Use first few chars for filename
+            link.href = outputCanvas.toDataURL('image/png');
+            link.click();
+
+            // Optionally, briefly show the canvas or provide feedback
+            // For now, it will just download.
+        }
+
+
+        // --- Event Listeners ---
+
+        // Initial rendering based on current selections
+        renderKeyboard(scriptSelect.value, keyboardLayoutSelect.value);
+        updateOutput(); // Updates the manual input/output fields
+
+        // Event listener for changes in the input field (manual typing or programmatic changes)
+        input.addEventListener('input', updateOutput);
+        // Event listener for changes in the script selection dropdown
+        scriptSelect.addEventListener('change', () => {
+            renderKeyboard(scriptSelect.value, keyboardLayoutSelect.value); // Pass both current values
+            updateOutput();
+            // Also update PDF transliteration if a PDF is loaded and text is extracted
+            if (pdfDoc) {
+                renderPage(currentPageNum); // Re-render page to apply new transliteration font
+            }
+        });
+        // NEW: Event listener for changes in the keyboard layout selection dropdown
+        keyboardLayoutSelect.addEventListener('change', () => {
+            renderKeyboard(scriptSelect.value, keyboardLayoutSelect.value); // Pass both current values
+            // No direct impact on text content, so no updateOutput() or PDF re-render needed.
+        });
+
+        // Add a click listener to the document to re-render diacritic buttons
+        document.addEventListener('click', (event) => {
+            if (event.target === input) {
+                renderDiacriticButtons();
+            }
+        });
+
+        // Add a keyup listener to the input field to re-render diacritic buttons
+        input.addEventListener('keyup', (event) => {
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) {
+                renderDiacriticButtons();
+            }
+        });
+
+        // Add event listener for physical keyboard input
+        input.addEventListener('keydown', (event) => {
+            // Allow browser defaults for control keys and navigation
+            if (event.ctrlKey || event.altKey || event.metaKey || event.key === 'Backspace' || event.key === 'Delete' ||
+                event.key.startsWith('Arrow') || event.key === 'Tab' || event.key === 'Home' || event.key === 'End') {
+                return;
+            }
+
+            let charToInsert = null;
+            let isBaseCharacter = true; // Assume base character unless it's a diacritic
+
+            // Check for Shift + Number keys first for diacritics
+            if (event.shiftKey && event.key >= '1' && event.key <= '9') {
+                charToInsert = physicalKeyToAssyrianMap[event.key];
+                isBaseCharacter = false; // It's a diacritic
+            }
+            // Check for Shift + Letter keys for specific letters/diacritics
+            else if (event.shiftKey) {
+                const shiftedKey = event.key.toUpperCase();
+                if (physicalKeyToAssyrianMap[shiftedKey]) {
+                    charToInsert = physicalKeyToAssyrianMap[shiftedKey];
+                    if (vowelsAndDiacritics.includes(charToInsert)) {
+                        isBaseCharacter = false;
+                    }
+                }
+            }
+            // Check for unshifted letter keys
+            else {
+                const unshiftedKey = event.key.toLowerCase();
+                if (physicalKeyToAssyrianMap[unshiftedKey]) {
+                    charToInsert = physicalKeyToAssyrianMap[unshiftedKey];
+                }
+            }
+
+            if (charToInsert !== null) {
+                event.preventDefault(); // Prevent default English character from being typed
+                insertAtCursor(charToInsert, isBaseCharacter);
+            }
+        });
+
+        // PDF upload and navigation event listeners
+        pdfUploadInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                loadPdf(file);
+            }
+        });
+
+        prevPageBtn.addEventListener('click', () => {
+            if (pdfDoc && currentPageNum > 1) {
+                renderPage(currentPageNum - 1);
+            }
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            if (pdfDoc && currentPageNum < pdfDoc.numPages) {
+                // FIX: Changed currentPageAlias to currentPageNum
+                renderPage(currentPageNum + 1);
+            }
+        });
+
+        // Event listener for the new "Save Text as Image" button
+        saveImageBtn.addEventListener('click', saveInputTextAsImage);
+
+
+        // Initialize OCR Worker when the page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            ocrStatusDisplay.textContent = 'Initializing OCR engine (core files)...';
+            try {
+                // IMPORTANT: Removed corePath. Tesseract.js should infer this from workerPath.
+                // This often resolves 'DataCloneError' and 404s for tesseract-core-simd.wasm.js
+                ocrWorker = await Tesseract.createWorker({
+                    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
+                    langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/syc@1.0.0/4.0.0_best_int/', // Use a stable CDN path
+                    logger: m => {
+                        // More granular logging for loading stages
+                        if (m.status && m.progress !== undefined) {
+                            if (m.status === 'loading tesseract core') {
+                                ocrStatusDisplay.textContent = `OCR Core: ${Math.round(m.progress * 100)}% loaded`;
+                            } else if (m.status === 'initializing tesseract') {
+                                ocrStatusDisplay.textContent = `OCR Initializing: ${Math.round(m.progress * 100)}%`;
+                            } else if (m.status === 'loading language traineddata') {
+                                ocrStatusDisplay.textContent = `OCR Language Data: ${Math.round(m.progress * 100)}% loaded`;
+                            } else {
+                                ocrStatusDisplay.textContent = `OCR: ${m.status} (${Math.round(m.progress * 100)}%)`;
+                            }
+                        }
+                    }
+                });
+                ocrStatusDisplay.textContent = 'OCR Engine: Loading language data...';
+                await ocrWorker.loadLanguage('syc');
+                ocrStatusDisplay.textContent = 'OCR Engine: Initializing language...';
+                await ocrWorker.initialize('syc');
+                ocrStatusDisplay.textContent = 'OCR Engine ready. Upload PDF to begin.';
+            } catch (error) {
+                console.error('Failed to initialize Tesseract.js worker:', error);
+                // Providing more direct user feedback for common issues
+                let userMessage = `Error during OCR initialization: ${error.name}: ${error.message}.`;
+                if (error.name === 'NetworkError' || error.message.includes('Failed to fetch') || error.message.includes('Can not load')) {
+                    userMessage += ' This often happens if the page is not served by a local web server (e.g., you opened it directly from your file system). Please ensure you are using a local server (like Python\'s http.server) and try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) after clearing your browser\'s cache.';
+                } else if (error.name === 'DataCloneError') {
+                     userMessage += ' This suggests an issue with the Web Worker. Please try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) and clear your browser\'s cache to ensure consistent Tesseract.js component loading.';
+                }
+                ocrStatusDisplay.textContent = userMessage;
+            }
+
+            // Initial rendering based on current selections after OCR worker is attempted to be loaded
+            renderKeyboard(scriptSelect.value, keyboardLayoutSelect.value);
+            updateOutput();
+            prevPageBtn.disabled = true;
+            nextPageBtn.disabled = true;
+        });
+
+    </script>
+</body>
+</html>
