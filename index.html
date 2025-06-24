@@ -154,7 +154,7 @@
                     <span class="font-medium">Significance:</span> This is an important early print of the Syriac Peshitta in the Eastern dialect, made accessible by the American Bible Society. It is a valuable resource for studying the Madnhaya script and its historical usage in biblical texts.
                 </p>
                 <p class="text-sm text-gray-600 italic">
-                    Note: The current OCR functionality relies on a generic Syriac ('syc') Tesseract model, which is primarily trained on Estrangelā. While it provides a good starting point, OCR accuracy for this specific Madnhaya font may vary and could significantly benefit from a custom-trained model.
+                    Note: The current OCR functionality relies on a generic Syriac ('syr') Tesseract model, which is primarily trained on Estrangelā. While it provides a good starting point, OCR accuracy for this specific Madnhaya font may vary and could significantly benefit from a custom-trained model.
                 </p>
             </div>
 
@@ -763,8 +763,8 @@
                         ocrWorker = await Tesseract.createWorker({
                             // Explicitly set workerPath for consistency.
                             workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
-                            // Updated langPath to a local path within the repo
-                            langPath: './tessdata/', // This is the crucial change
+                            // Updated langPath to JSDelivr path for syr (Syriac)
+                            langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/syr@1.0.0/4.0.0_best_int/', // Corrected to 'syr'
                             logger: m => {
                                 if (m.status && m.progress !== undefined) {
                                     if (m.status === 'loading tesseract core') {
@@ -780,9 +780,9 @@
                             }
                         });
                         ocrStatusDisplay.textContent = 'OCR Engine: Loading language data...';
-                        await ocrWorker.loadLanguage('syc');
+                        await ocrWorker.loadLanguage('syr'); // Corrected to 'syr'
                         ocrStatusDisplay.textContent = 'OCR Engine: Initializing language...';
-                        await ocrWorker.initialize('syc');
+                        await ocrWorker.initialize('syr'); // Corrected to 'syr'
                         ocrStatusDisplay.textContent = 'OCR Engine ready.';
                     }
 
@@ -971,8 +971,8 @@
                 ocrWorker = await Tesseract.createWorker({
                     // Set workerPath relative to the root if your worker.min.js is there, or absolute if on CDN
                     workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
-                    // Updated langPath to a local path within the repo's tessdata folder
-                    langPath: './tessdata/', // IMPORTANT: This must match the path in your repo
+                    // Updated langPath to JSDelivr path for syr (Syriac)
+                    langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/syr@1.0.0/4.0.0_best_int/', // Corrected to 'syr'
                     logger: m => {
                         if (m.status && m.progress !== undefined) {
                             if (m.status === 'loading tesseract core') {
@@ -988,9 +988,9 @@
                     }
                 });
                 ocrStatusDisplay.textContent = 'OCR Engine: Loading language data...';
-                await ocrWorker.loadLanguage('syc');
+                await ocrWorker.loadLanguage('syr'); // Corrected to 'syr'
                 ocrStatusDisplay.textContent = 'OCR Engine: Initializing language...';
-                await ocrWorker.initialize('syc');
+                await ocrWorker.initialize('syr'); // Corrected to 'syr'
                 ocrStatusDisplay.textContent = 'OCR Engine ready. Loading default PDF...';
 
                 // Automatically load the specified PDF from the URL
@@ -1019,8 +1019,8 @@
             // Initial rendering of keyboard after OCR worker is attempted to be loaded
             renderKeyboard(scriptSelect.value, keyboardLayoutSelect.value);
             updateOutput();
-            prevPageBtn.disabled = true;
-            nextPageBtn.disabled = true;
+            prevPageBtn.disabled = false;
+            nextPageBtn.disabled = false;
         });
 
     </script>
