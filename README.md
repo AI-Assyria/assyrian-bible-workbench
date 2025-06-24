@@ -5,7 +5,7 @@
 The **Assyrian Keyboard & PDF Workbench** is a web-based application designed to facilitate interaction with the Eastern (**Maḏnḥāyā**) Syriac script. It combines:
 
 - A virtual Assyrian keyboard for easy text input.
-- A PDF viewer for displaying historical texts (like the American Bible Society Peshitta).
+- A PDF viewer for displaying historical texts (like the American Bible Society 1886 Modern Assyrian Bible).
 - OCR (Optical Character Recognition) to extract and transliterate text directly from PDF documents.
 
 This tool is ideal for scholars, students, and anyone engaging with Syriac texts—especially those in the Eastern dialect.
@@ -113,7 +113,7 @@ Then open: [http://localhost:8000/assyrian-keyboard-app.html](http://localhost:8
 ## 📝 Important Notes on Syriac Script
 
 * **Eastern Vowel Accuracy**: Diacritic rendering is tailored to the **Eastern Syriac (Maḏnḥāyā)** tradition.
-* **OCR Limitations**: The `syr` model is mainly trained on **Estrangelā**. OCR accuracy may vary with Eastern fonts. A future goal is training a custom Tesseract model on Peshitta glyphs.
+* **OCR Limitations**: The `syr` model is mainly trained on **Estrangelā**. OCR accuracy may vary with Eastern fonts. A future goal is training a custom Tesseract model on Maḏnḥāyā glyphs specifically.
 
 ---
 
