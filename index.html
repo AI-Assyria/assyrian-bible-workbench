@@ -140,11 +140,26 @@
     <div class="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-xl">
         <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Assyrian Keyboard & PDF Workbench</h1>
 
-        <!-- PDF Upload Section -->
+        <!-- PDF Loader & Info Section -->
         <div class="mb-8 p-4 bg-gray-50 rounded-lg shadow-inner">
             <h2 class="text-2xl font-semibold text-gray-800 mb-4">PDF Reader & OCR</h2>
+
+            <!-- Information about the pre-loaded PDF -->
+            <div class="mb-6 p-4 bg-white rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Currently Displaying: American Bible Society Peshitta (1886 Edition)</h3>
+                <p class="text-gray-700 mb-1">
+                    <span class="font-medium">Script:</span> Maḏnḥāyā (Eastern Syriac)
+                </p>
+                <p class="text-gray-700 mb-2">
+                    <span class="font-medium">Significance:</span> This is an important early print of the Syriac Peshitta in the Eastern dialect, made accessible by the American Bible Society. It is a valuable resource for studying the Madnhaya script and its historical usage in biblical texts.
+                </p>
+                <p class="text-sm text-gray-600 italic">
+                    Note: The current OCR functionality relies on a generic Syriac ('syc') Tesseract model, which is primarily trained on Estrangelā. While it provides a good starting point, OCR accuracy for this specific Madnhaya font may vary and could significantly benefit from a custom-trained model.
+                </p>
+            </div>
+
             <div class="mb-4">
-                <label for="pdf-upload" class="block text-lg font-medium text-gray-700 mb-2">Upload Assyrian PDF:</label>
+                <label for="pdf-upload" class="block text-lg font-medium text-gray-700 mb-2">Or, upload another Assyrian PDF (from your computer):</label>
                 <input type="file" id="pdf-upload" accept="application/pdf" class="block w-full text-sm text-gray-500
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-full file:border-0
@@ -241,6 +256,7 @@
 
         // PDF elements
         const pdfUploadInput = document.getElementById('pdf-upload');
+        // Removed pdfUrlInput and loadUrlPdfBtn as we're embedding a default
         const prevPageBtn = document.getElementById('prev-page-btn');
         const nextPageBtn = document.getElementById('next-page-btn');
         const pageNumDisplay = document.getElementById('page-num-display');
@@ -256,7 +272,6 @@
         const saveImageBtn = document.getElementById('save-image-btn');
         const outputCanvas = document.getElementById('output-canvas');
         const outputCanvasCtx = outputCanvas.getContext('2d');
-
 
         // PDF variables
         let pdfDoc = null; // Stores the loaded PDF document
@@ -622,41 +637,59 @@
         // --- PDF.js Functions ---
 
         /**
-         * Loads a PDF document from a file and renders the first page.
-         * @param {File} file - The PDF file to load.
+         * Loads a PDF document from a File object or a URL.
+         * @param {File | string} source - The PDF File object or a URL string.
          */
-        async function loadPdf(file) {
-            const fileReader = new FileReader();
-            fileReader.onload = async () => {
-                const typedarray = new Uint8Array(fileReader.result);
-                try {
-                    pdfDoc = await pdfjsLib.getDocument({ data: typedarray }).promise;
-                    currentPageNum = 1;
-                    renderPage(currentPageNum);
-                    // Enable navigation buttons
-                    prevPageBtn.disabled = true; // First page, so previous is disabled
-                    nextPageBtn.disabled = pdfDoc.numPages <= 1; // Disable next if only one page
-                } catch (error) {
-                    console.error('Error loading PDF:', error);
-                    // Using a custom message box instead of alert()
-                    const errorMessage = document.createElement('div');
-                    errorMessage.textContent = 'Failed to load PDF. Please ensure it is a valid PDF file.';
-                    errorMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: #f8d7da; color: #721c24; padding: 10px 20px; border-radius: 5px; border: 1px solid #f5c6cb; z-index: 1000;';
-                    document.body.appendChild(errorMessage);
-                    setTimeout(() => errorMessage.remove(), 5000); // Remove after 5 seconds
-
-                    pdfDoc = null;
-                    currentPageNum = 1;
-                    pageNumDisplay.textContent = 'Page: - / -';
-                    pdfRenderCanvas.width = 0;
-                    pdfRenderCanvas.height = 0;
-                    pdfExtractedTextDiv.textContent = 'Failed to load PDF.';
-                    pdfTransliteratedTextDiv.textContent = 'Failed to load PDF.';
-                    prevPageBtn.disabled = true;
-                    nextPageBtn.disabled = true;
+        async function loadPdf(source) {
+            try {
+                let pdfData;
+                if (source instanceof File) {
+                    // Handle File object from input type="file"
+                    const fileReader = new FileReader();
+                    pdfData = await new Promise((resolve, reject) => {
+                        fileReader.onload = () => resolve(new Uint8Array(fileReader.result));
+                        fileReader.onerror = reject;
+                        fileReader.readAsArrayBuffer(source);
+                    });
+                } else if (typeof source === 'string') {
+                    // Handle URL string
+                    if (!source.startsWith('http://') && !source.startsWith('https://')) {
+                         throw new Error('Invalid URL format. Must start with http:// or https://');
+                    }
+                    const response = await fetch(source);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+                    }
+                    pdfData = new Uint8Array(await response.arrayBuffer());
+                } else {
+                    throw new Error('Invalid PDF source provided. Must be a File or a URL string.');
                 }
-            };
-            fileReader.readAsArrayBuffer(file);
+
+                pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+                currentPageNum = 1;
+                renderPage(currentPageNum);
+                // Enable navigation buttons
+                prevPageBtn.disabled = true; // First page, so previous is disabled
+                nextPageBtn.disabled = pdfDoc.numPages <= 1; // Disable next if only one page
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                // Using a custom message box instead of alert()
+                const errorMessage = document.createElement('div');
+                errorMessage.textContent = `Failed to load PDF: ${error.message}. Please ensure it is a valid PDF and, if using a URL, that it is accessible.`;
+                errorMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: #f8d7da; color: #721c24; padding: 10px 20px; border-radius: 5px; border: 1px solid #f5c6cb; z-index: 1000;';
+                document.body.appendChild(errorMessage);
+                setTimeout(() => errorMessage.remove(), 7000); // Remove after 7 seconds
+
+                pdfDoc = null;
+                currentPageNum = 1;
+                pageNumDisplay.textContent = 'Page: - / -';
+                pdfRenderCanvas.width = 0;
+                pdfRenderCanvas.height = 0;
+                pdfExtractedTextDiv.textContent = 'Failed to load PDF.';
+                pdfTransliteratedTextDiv.textContent = 'Failed to load PDF.';
+                prevPageBtn.disabled = true;
+                nextPageBtn.disabled = true;
+            }
         }
 
         /**
@@ -917,6 +950,9 @@
             }
         });
 
+        // Removed loadUrlPdfBtn event listener and associated input/button HTML
+        // as the PDF is now pre-loaded by default.
+
         prevPageBtn.addEventListener('click', () => {
             if (pdfDoc && currentPageNum > 1) {
                 renderPage(currentPageNum - 1);
@@ -925,7 +961,6 @@
 
         nextPageBtn.addEventListener('click', () => {
             if (pdfDoc && currentPageNum < pdfDoc.numPages) {
-                // FIX: Changed currentPageAlias to currentPageNum
                 renderPage(currentPageNum + 1);
             }
         });
@@ -934,17 +969,14 @@
         saveImageBtn.addEventListener('click', saveInputTextAsImage);
 
 
-        // Initialize OCR Worker when the page loads
+        // Initialize OCR Worker and load default PDF when the page loads
         document.addEventListener('DOMContentLoaded', async () => {
             ocrStatusDisplay.textContent = 'Initializing OCR engine (core files)...';
             try {
-                // IMPORTANT: Removed corePath. Tesseract.js should infer this from workerPath.
-                // This often resolves 'DataCloneError' and 404s for tesseract-core-simd.wasm.js
                 ocrWorker = await Tesseract.createWorker({
                     workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
-                    langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/syc@1.0.0/4.0.0_best_int/', // Use a stable CDN path
+                    langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/syc@1.0.0/4.0.0_best_int/',
                     logger: m => {
-                        // More granular logging for loading stages
                         if (m.status && m.progress !== undefined) {
                             if (m.status === 'loading tesseract core') {
                                 ocrStatusDisplay.textContent = `OCR Core: ${Math.round(m.progress * 100)}% loaded`;
@@ -962,11 +994,17 @@
                 await ocrWorker.loadLanguage('syc');
                 ocrStatusDisplay.textContent = 'OCR Engine: Initializing language...';
                 await ocrWorker.initialize('syc');
-                ocrStatusDisplay.textContent = 'OCR Engine ready. Upload PDF to begin.';
+                ocrStatusDisplay.textContent = 'OCR Engine ready. Loading default PDF...';
+
+                // Automatically load the specified PDF from the URL
+                const defaultPdfUrl = 'https://raw.githubusercontent.com/fshabaka/assyrian-bible-workbench/main/ABSPeshitta1886.pdf';
+                await loadPdf(defaultPdfUrl);
+                ocrStatusDisplay.textContent = 'OCR Engine ready. Default PDF loaded.';
+
+
             } catch (error) {
-                console.error('Failed to initialize Tesseract.js worker:', error);
-                // Providing more direct user feedback for common issues
-                let userMessage = `Error during OCR initialization: ${error.name}: ${error.message}.`;
+                console.error('Failed to initialize Tesseract.js worker or load default PDF:', error);
+                let userMessage = `Error during OCR initialization or default PDF load: ${error.name}: ${error.message}.`;
                 if (error.name === 'NetworkError' || error.message.includes('Failed to fetch') || error.message.includes('Can not load')) {
                     userMessage += ' This often happens if the page is not served by a local web server (e.g., you opened it directly from your file system). Please ensure you are using a local server (like Python\'s http.server) and try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) after clearing your browser\'s cache.';
                 } else if (error.name === 'DataCloneError') {
@@ -975,7 +1013,7 @@
                 ocrStatusDisplay.textContent = userMessage;
             }
 
-            // Initial rendering based on current selections after OCR worker is attempted to be loaded
+            // Initial rendering of keyboard after OCR worker is attempted to be loaded
             renderKeyboard(scriptSelect.value, keyboardLayoutSelect.value);
             updateOutput();
             prevPageBtn.disabled = true;
