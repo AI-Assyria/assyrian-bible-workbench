@@ -997,10 +997,10 @@
                 // The URL you need will start with https://raw.githubusercontent.com/...
                 // Example of what it should look like (but with your repo/file details):
                 // 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/main/ABS%201886.pdf'
-                const defaultPdfUrl = 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/blob/main/ABS%201886.pdf$0'; // PASTE YOUR RAW URL HERE!
+                const defaultPdfUrl = 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/main/ABS%201886.pdf'; // PASTE YOUR RAW URL HERE!
                 
                 // Add a check to ensure the default URL is not the placeholder before trying to load
-                if (defaultPdfUrl === 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/blob/main/ABS%201886.pdf$0' || defaultPdfUrl.includes('AI-Assyria')) {
+                if (defaultPdfUrl === 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/main/ABS%201886.pdf' || defaultPdfUrl.includes('AI-Assyria')) {
                     ocrStatusDisplay.textContent = 'OCR Engine ready. Please update the HTML with your PDF URL to auto-load a document.';
                 } else {
                     await loadPdf(defaultPdfUrl);
