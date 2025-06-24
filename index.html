@@ -994,10 +994,13 @@
 
                 // Automatically load the specified PDF from the URL
                 // IMPORTANT: Replace this with YOUR actual public raw GitHub URL for your PDF!
-                const defaultPdfUrl = 'https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME/main/YOUR_PDF_FILENAME.pdf'; // Example: https://raw.githubusercontent.com/fshabaka/assyrian-bible-workbench/main/ABSPeshitta1886.pdf
+                // The URL you need will start with https://raw.githubusercontent.com/...
+                // Example of what it should look like (but with your repo/file details):
+                // 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/main/ABS%201886.pdf'
+                const defaultPdfUrl = 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/blob/main/ABS%201886.pdf$0'; // PASTE YOUR RAW URL HERE!
                 
                 // Add a check to ensure the default URL is not the placeholder before trying to load
-                if (defaultPdfUrl.includes('YOUR_GITHUB_USERNAME')) {
+                if (defaultPdfUrl === 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/blob/main/ABS%201886.pdf$0' || defaultPdfUrl.includes('AI-Assyria')) {
                     ocrStatusDisplay.textContent = 'OCR Engine ready. Please update the HTML with your PDF URL to auto-load a document.';
                 } else {
                     await loadPdf(defaultPdfUrl);
@@ -1011,7 +1014,7 @@
                 if (error.name === 'NetworkError' || error.message.includes('Failed to fetch') || error.message.includes('Can not load')) {
                     userMessage += ' This often happens if the page is not served by a local web server (e.g., you opened it directly from your file system). Please ensure you are using a local server (like Python\'s http.server) and try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) after clearing your browser\'s cache.';
                 } else if (error.name === 'DataCloneError') {
-                     userMessage += ' This suggests an issue with the Web Worker. Please try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) and clear your browser\'s cache to ensure consistent Tesseract.js component loading.';
+                     userMessage += ' This suggests an issue with the Web Worker. Please try a hard refresh (Ctrl+Shift+R or Cmd+Shift-R) and clear your browser\'s cache to ensure consistent Tesseract.js component loading.';
                 }
                 ocrStatusDisplay.textContent = userMessage;
             }
