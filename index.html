@@ -16,16 +16,10 @@
 #/* along with this program. If not, see <https://www.gnu.org/licenses/>.
 -->
 
-     
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-
-
-
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assyrian Keyboard & PDF Workbench</title>
@@ -310,32 +304,44 @@
             'ܠ', 'ܡ', 'ܢ', 'ܣ', 'ܥ', 'ܦ', 'ܨ', 'ܩ', 'ܪ', 'ܫ', 'ܬ'
         ];
 
-        // Eastern Syriac vowels and diacritics
+        // Eastern Syriac vowels and diacritics - ALIGNED WITH USER'S PROVIDED LIST AND UNICODE
         const vowelsAndDiacritics = [
-            'ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'
+            'ܲ', // pṯāḥā (U+0732)
+            'ܵ', // zqāp̄ā (U+0735)
+            'ܶ', // rḇāṣā ʾărīḵā (U+0736) - short e/i
+            'ܹ', // rḇāṣā karyā (U+0739) - long e
+            'ܼ', // ḥḇāṣā (U+073C, dot below for i/u)
+            'ܿ', // ʿṣāṣā rwīḥā (U+073F, dot above for o)
+            '݂', // quššāyā (hard mark)
+            '݄'  // rukkākhā (soft mark)
         ];
 
-        // Tooltips for diacritics
+        // Tooltips for diacritics - ALIGNED WITH USER'S PROVIDED LIST
         const diacriticTooltips = {
-            'ܵ': 'ā – zqāp̄ā (long a)',
-            'ܲ': 'ă – pṯāḥā (short a)',
-            'ܸ': 'e – rḇāṣā ʾărīḵā',
-            'ܹ': 'ē – rḇāṣā karyā',
-            'ܼ': 'ī – ḥḇāṣā',
-            'ܿ': 'ō – ʿṣāṣā rwīḥā',
-            'ܽ': 'ū – ʿṣāṣā ʾălīṣā',
+            'ܲ': 'ă – pṯāḥā (dot above & below, short a)',
+            'ܵ': 'ā – zqāp̄ā (two diagonal dots above, long a)',
+            'ܶ': 'e / ĕ / i – rḇāṣā ʾărīḵā (two horizontal dots below, short e/i)',
+            'ܹ': 'ē – rḇāṣā karyā (two diagonal dots below, long e)',
+            'ܼ': 'ī / ū – ḥḇāṣā / ʿṣāṣā ʾălīṣā (dot below, for i or u with waw/yod)',
+            'ܿ': 'ō – ʿṣāṣā rwīḥā (dot above, for o with waw)',
             '݂': "' – quššāyā (hard)",
             '݄': '· – rukkākhā (soft)'
         };
 
-        // Map for transliteration (for outputting transliterated text)
+        // Map for transliteration (for outputting transliterated text) - ALIGNED
         const transliterationMap = {
             'ܐ': 'ʾ', 'ܒ': 'b', 'ܓ': 'g', 'ܕ': 'd', 'ܗ': 'h', 'ܘ': 'w',
             'ܙ': 'z', 'ܚ': 'ḥ', 'ܛ': 'ṭ', 'ܝ': 'y', 'ܟ': 'k', 'ܠ': 'l',
             'ܡ': 'm', 'ܢ': 'n', 'ܣ': 's', 'ܥ': 'ʿ', 'ܦ': 'p', 'ܨ': 'ṣ',
             'ܩ': 'q', 'ܪ': 'r', 'ܫ': 'š', 'ܬ': 't',
-            'ܵ': 'ā', 'ܲ': 'ă', 'ܸ': 'e', 'ܹ': 'ē', 'ܼ': 'ī', 'ܿ': 'ō', 'ܽ': 'ū',
-            '݂': "'", '݄': ''
+            'ܲ': 'ă',
+            'ܵ': 'ā',
+            'ܶ': 'e', // Transliteration for rḇāṣā ʾărīḵā
+            'ܹ': 'ē', // Transliteration for rḇāṣā karyā
+            'ܼ': 'ī', // Transliteration for ḥḇāṣā and ʿṣāṣā ʾălīṣā (as general dot below)
+            'ܿ': 'ō', // Transliteration for ʿṣāṣā rwīḥā
+            '݂': "'",
+            '݄': ''
         };
 
         // For now, Madnhaya and Estrangela letters are the same for the base set
@@ -344,28 +350,28 @@
 
         // Map letters to allowed diacritics. This is crucial for correct input.
         const validDiacriticsMap = {
-            'ܐ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܿ', 'ܽ'],
-            'ܒ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'],
-            'ܓ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'],
-            'ܕ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'],
-            'ܗ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܘ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܙ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܚ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܛ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܝ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܟ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'],
-            'ܠ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܡ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܢ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܣ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܥ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܦ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'],
-            'ܨ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܩ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܪ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܫ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'],
-            'ܬ': ['ܵ', 'ܲ', 'ܸ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄']
+            'ܐ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܒ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'], // Ensure both ܶ and ܹ are options
+            'ܓ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'], // Ensure both ܶ and ܹ are options
+            'ܕ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'], // Ensure both ܶ and ܹ are options
+            'ܗ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܘ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܙ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܚ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܛ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܝ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܟ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'], // Ensure both ܶ and ܹ are options
+            'ܠ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܡ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܢ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܣ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܥ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܦ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'], // Ensure both ܶ and ܹ are options
+            'ܨ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܩ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܪ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܫ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ'], // Ensure both ܶ and ܹ are options
+            'ܬ': ['ܵ', 'ܲ', 'ܸ', 'ܶ', 'ܹ', 'ܼ', 'ܿ', 'ܽ', '݂', '݄'] // Ensure both ܶ and ܹ are options
         };
 
         // Mapping of physical keyboard keys to Assyrian characters and diacritics
@@ -376,19 +382,26 @@
             'z': 'ܙ', 'x': 'ܨ', 'c': 'ܥ', 'v': 'ܒ', 'b': 'ܒ', 'n': 'ܢ', 'm': 'ܡ',
 
             // Diacritics (using Shift + a key, or specific symbols/numbers)
-            // These mappings are chosen to be relatively intuitive for QWERTY users.
-            'A': 'ܵ', 'S': 'ܲ', 'D': 'ܸ', 'F': 'ܹ', 'G': 'ܼ', 'H': 'ܿ', 'J': 'ܽ', 'K': '݂', 'L': '݄',
+            // Re-mapping to align with the new distinct vowels
+            'A': 'ܵ', // Shift+A for Zqapa (ā)
+            'S': 'ܲ', // Shift+S for Ptaha (ă)
+            'D': 'ܶ', // Shift+D for rḇāṣā ʾărīḵā (short e/i)
+            'F': 'ܹ', // Shift+F for rḇāṣā karyā (long e)
+            'G': 'ܼ', // Shift+G for Hbasa/Hruca (i/u dot below)
+            'H': 'ܿ', // Shift+H for Esasa (o dot above)
+            'K': '݂', // Shift+K for Qushaya (hard)
+            'L': '݄', // Shift+L for Rukkakha (soft)
 
             // Shift + Number mappings for diacritics/vowels (preferred for clarity)
             '1': 'ܵ', // Shift+1 for Zqapa (ā)
             '2': 'ܲ', // Shift+2 for Ptaha (ă)
-            '3': 'ܸ', // Shift+3 for Rbasa Arika (e)
-            '4': 'ܹ', // Shift+4 for Rbasa Karya (ē)
-            '5': 'ܼ', // Shift+5 for Hbasa (ī)
-            '6': 'ܿ', // Shift+6 for Asasa Rwiha (ō)
-            '7': 'ܽ', // Shift+7 for Asasa Alisa (ū)
+            '3': 'ܸ', // Old Rbasa Aricaha (ܸ U+0735) - Keeping this for consistency with previous system if needed, though user clarified ܶ is preferred
+            '4': 'ܶ', // Shift+4 for rḇāṣā ʾărīḵā (e/i)
+            '5': 'ܹ', // Shift+5 for rḇāṣā karyā (ē)
+            '6': 'ܼ', // Shift+6 for Hbasa/Hruca (i/u dot below)
+            '7': 'ܿ', // Shift+7 for Esasa (o dot above)
             '8': '݂', // Shift+8 for Qushaya (hard mark)
-            '9': '݄', // Shift+9 for Rukkakha (soft mark
+            '9': '݄', // Shift+9 for Rukkakha (soft mark)
 
             // Common non-alphabetic keys
             ' ': ' ', // Space
@@ -789,7 +802,7 @@
                             // Explicitly set workerPath for consistency.
                             workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
                             // Updated langPath to JSDelivr path for syr (Syriac)
-                            langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/syr@1.0.0/4.0.0_best_int/', // Corrected to 'syr'
+                            langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/syr@1.0.0/4.0.0_best_int/', // Using 'syr'
                             logger: m => {
                                 if (m.status && m.progress !== undefined) {
                                     if (m.status === 'loading tesseract core') {
@@ -805,9 +818,9 @@
                             }
                         });
                         ocrStatusDisplay.textContent = 'OCR Engine: Loading language data...';
-                        await ocrWorker.loadLanguage('syr'); // Corrected to 'syr'
+                        await ocrWorker.loadLanguage('syr'); // Using 'syr'
                         ocrStatusDisplay.textContent = 'OCR Engine: Initializing language...';
-                        await ocrWorker.initialize('syr'); // Corrected to 'syr'
+                        await ocrWorker.initialize('syr'); // Using 'syr'
                         ocrStatusDisplay.textContent = 'OCR Engine ready.';
                     }
 
@@ -1035,8 +1048,8 @@
                 let userMessage = `Error during OCR initialization or default PDF load: ${error && error.name ? error.name : 'Unknown Error'}: ${error && error.message ? error.message : 'No message available'}.`;
                 if (error && error.message && (error.message.includes('Failed to fetch') || error.message.includes('Can not load'))) {
                     userMessage += ' This often happens if the page is not served by a local web server (e.g., you opened it directly from your file system). Please ensure you are using a local server (like Python\'s http.server) and try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) after clearing your browser\'s cache.';
-                } else if (error && error.name === 'DataCloneError') {
-                     userMessage += ' This suggests an issue with the Web Worker. Please try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) and clear your browser\'s cache to ensure consistent Tesseract.js component loading.';
+                } else if (error && error.message.includes('Tesseract.js: Failed to load language data. You may need to provide a custom "langPath".')) {
+                    userMessage += ` It appears the language data for 'syr' could not be loaded from the specified path. Double-check your internet connection and verify that 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/syr@1.0.0/4.0.0_best_int/' is accessible.`;
                 }
                 ocrStatusDisplay.textContent = userMessage;
             }
@@ -1044,7 +1057,7 @@
             // Initial rendering of keyboard after OCR worker is attempted to be loaded
             renderKeyboard(scriptSelect.value, keyboardLayoutSelect.value);
             updateOutput();
-            prevPageBtn.disabled = false;
+            prevPageBtn.disabled = true;
             nextPageBtn.disabled = false;
         });
 
