@@ -256,7 +256,6 @@
 
         // PDF elements
         const pdfUploadInput = document.getElementById('pdf-upload');
-        // Removed pdfUrlInput and loadUrlPdfBtn as we're embedding a default
         const prevPageBtn = document.getElementById('prev-page-btn');
         const nextPageBtn = document.getElementById('next-page-btn');
         const pageNumDisplay = document.getElementById('page-num-display');
@@ -950,9 +949,6 @@
             }
         });
 
-        // Removed loadUrlPdfBtn event listener and associated input/button HTML
-        // as the PDF is now pre-loaded by default.
-
         prevPageBtn.addEventListener('click', () => {
             if (pdfDoc && currentPageNum > 1) {
                 renderPage(currentPageNum - 1);
@@ -997,9 +993,16 @@
                 ocrStatusDisplay.textContent = 'OCR Engine ready. Loading default PDF...';
 
                 // Automatically load the specified PDF from the URL
-                const defaultPdfUrl = 'https://raw.githubusercontent.com/fshabaka/assyrian-bible-workbench/main/ABSPeshitta1886.pdf';
-                await loadPdf(defaultPdfUrl);
-                ocrStatusDisplay.textContent = 'OCR Engine ready. Default PDF loaded.';
+                // IMPORTANT: Replace this with YOUR actual public raw GitHub URL for your PDF!
+                const defaultPdfUrl = 'https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME/main/YOUR_PDF_FILENAME.pdf'; // Example: https://raw.githubusercontent.com/fshabaka/assyrian-bible-workbench/main/ABSPeshitta1886.pdf
+                
+                // Add a check to ensure the default URL is not the placeholder before trying to load
+                if (defaultPdfUrl.includes('YOUR_GITHUB_USERNAME')) {
+                    ocrStatusDisplay.textContent = 'OCR Engine ready. Please update the HTML with your PDF URL to auto-load a document.';
+                } else {
+                    await loadPdf(defaultPdfUrl);
+                    ocrStatusDisplay.textContent = 'OCR Engine ready. Default PDF loaded.';
+                }
 
 
             } catch (error) {
