@@ -674,7 +674,7 @@
                 console.error('Error loading PDF:', error);
                 // Using a custom message box instead of alert()
                 const errorMessage = document.createElement('div');
-                errorMessage.textContent = `Failed to load PDF: ${error.message}. Please ensure it is a valid PDF and, if using a URL, that it is accessible.`;
+                errorMessage.textContent = `Failed to load PDF: ${error && error.message ? error.message : 'Unknown error'}. Please ensure it is a valid PDF and, if using a URL, that it is accessible.`;
                 errorMessage.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: #f8d7da; color: #721c24; padding: 10px 20px; border-radius: 5px; border: 1px solid #f5c6cb; z-index: 1000;';
                 document.body.appendChild(errorMessage);
                 setTimeout(() => errorMessage.remove(), 7000); // Remove after 7 seconds
@@ -763,9 +763,8 @@
                         ocrWorker = await Tesseract.createWorker({
                             // Explicitly set workerPath for consistency.
                             workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
-                            // IMPORTANT: Removed corePath. Tesseract.js should infer this from workerPath.
-                            // This often resolves 'DataCloneError' and 404s for tesseract-core-simd.wasm.js
-                            langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/syc@1.0.0/4.0.0_best_int/', // Use a stable CDN path
+                            // Updated langPath to a stable Tesseract CDN
+                            langPath: 'https://tessdata.projectnaptha.com/4.00/',
                             logger: m => {
                                 if (m.status && m.progress !== undefined) {
                                     if (m.status === 'loading tesseract core') {
@@ -802,11 +801,11 @@
                 console.error('Error rendering page or extracting text/OCR:', error);
                 pdfExtractedTextDiv.textContent = 'Error processing page.';
                 pdfTransliteratedTextDiv.textContent = 'Error processing page.';
-                // Enhanced error message for user
-                let userMessage = `Error during PDF processing or OCR: ${error.name}: ${error.message}.`;
-                if (error.name === 'NetworkError' || error.message.includes('Failed to fetch') || error.message.includes('Can not load')) {
+                // Enhanced error message for user with error.message check
+                let userMessage = `Error during PDF processing or OCR: ${error && error.name ? error.name : 'Unknown Error'}: ${error && error.message ? error.message : 'No message available'}.`;
+                if (error && error.message && (error.message.includes('Failed to fetch') || error.message.includes('Can not load'))) {
                     userMessage += ' This often happens if the page is not served by a local web server (e.g., you opened it directly from your file system). Please ensure you are using a local server (like Python\'s http.server) and try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) after clearing your browser\'s cache.';
-                } else if (error.name === 'DataCloneError') {
+                } else if (error && error.name === 'DataCloneError') {
                      userMessage += ' This suggests an issue with the Web Worker. Please try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) and clear your browser\'s cache to ensure consistent Tesseract.js component loading.';
                 }
                 ocrStatusDisplay.textContent = userMessage;
@@ -971,7 +970,8 @@
             try {
                 ocrWorker = await Tesseract.createWorker({
                     workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
-                    langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/syc@1.0.0/4.0.0_best_int/',
+                    // Updated langPath to a stable Tesseract CDN
+                    langPath: 'https://tessdata.projectnaptha.com/4.00/',
                     logger: m => {
                         if (m.status && m.progress !== undefined) {
                             if (m.status === 'loading tesseract core') {
@@ -993,14 +993,12 @@
                 ocrStatusDisplay.textContent = 'OCR Engine ready. Loading default PDF...';
 
                 // Automatically load the specified PDF from the URL
-                // IMPORTANT: Replace this with YOUR actual public raw GitHub URL for your PDF!
-                // The URL you need will start with https://raw.githubusercontent.com/...
-                // Example of what it should look like (but with your repo/file details):
-                // 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/main/ABS%201886.pdf'
-                const defaultPdfUrl = 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/main/ABS%201886.pdf'; // PASTE YOUR RAW URL HERE!
+                // IMPORTANT: Ensure this is YOUR actual public raw GitHub URL for your PDF!
+                // It should start with https://raw.githubusercontent.com/...
+                const defaultPdfUrl = 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/main/ABS%201886.pdf';
                 
                 // Add a check to ensure the default URL is not the placeholder before trying to load
-                if (defaultPdfUrl === 'https://raw.githubusercontent.com/AI-Assyria/assyrian-bible-workbench/main/ABS%201886.pdf' || defaultPdfUrl.includes('AI-Assyria')) {
+                if (defaultPdfUrl.includes('YOUR_GITHUB_USERNAME') || defaultPdfUrl.includes('YOUR_REPOSITORY_NAME') || defaultPdfUrl.includes('YOUR_PDF_FILENAME')) {
                     ocrStatusDisplay.textContent = 'OCR Engine ready. Please update the HTML with your PDF URL to auto-load a document.';
                 } else {
                     await loadPdf(defaultPdfUrl);
@@ -1010,11 +1008,11 @@
 
             } catch (error) {
                 console.error('Failed to initialize Tesseract.js worker or load default PDF:', error);
-                let userMessage = `Error during OCR initialization or default PDF load: ${error.name}: ${error.message}.`;
-                if (error.name === 'NetworkError' || error.message.includes('Failed to fetch') || error.message.includes('Can not load')) {
+                let userMessage = `Error during OCR initialization or default PDF load: ${error && error.name ? error.name : 'Unknown Error'}: ${error && error.message ? error.message : 'No message available'}.`;
+                if (error && error.message && (error.message.includes('Failed to fetch') || error.message.includes('Can not load'))) {
                     userMessage += ' This often happens if the page is not served by a local web server (e.g., you opened it directly from your file system). Please ensure you are using a local server (like Python\'s http.server) and try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) after clearing your browser\'s cache.';
-                } else if (error.name === 'DataCloneError') {
-                     userMessage += ' This suggests an issue with the Web Worker. Please try a hard refresh (Ctrl+Shift+R or Cmd+Shift-R) and clear your browser\'s cache to ensure consistent Tesseract.js component loading.';
+                } else if (error && error.name === 'DataCloneError') {
+                     userMessage += ' This suggests an issue with the Web Worker. Please try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R) and clear your browser\'s cache to ensure consistent Tesseract.js component loading.';
                 }
                 ocrStatusDisplay.textContent = userMessage;
             }
@@ -1022,8 +1020,8 @@
             // Initial rendering of keyboard after OCR worker is attempted to be loaded
             renderKeyboard(scriptSelect.value, keyboardLayoutSelect.value);
             updateOutput();
-            prevPageBtn.disabled = true;
-            nextPageBtn.disabled = true;
+            prevPageBtn.disabled = false;
+            nextPageBtn.disabled = false;
         });
 
     </script>
