@@ -763,8 +763,8 @@
                         ocrWorker = await Tesseract.createWorker({
                             // Explicitly set workerPath for consistency.
                             workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
-                            // Updated langPath to a stable Tesseract CDN
-                            langPath: 'https://tessdata.projectnaptha.com/4.00/',
+                            // Updated langPath to a stable Tesseract CDN using jsdelivr for raw GitHub files
+                            langPath: 'https://cdn.jsdelivr.net/gh/naptha/tessdata@4.00_best/',
                             logger: m => {
                                 if (m.status && m.progress !== undefined) {
                                     if (m.status === 'loading tesseract core') {
@@ -970,8 +970,8 @@
             try {
                 ocrWorker = await Tesseract.createWorker({
                     workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/worker.min.js',
-                    // Updated langPath to a stable Tesseract CDN
-                    langPath: 'https://tessdata.projectnaptha.com/4.00/',
+                    // Updated langPath to a stable Tesseract CDN using jsdelivr for raw GitHub files
+                    langPath: 'https://cdn.jsdelivr.net/gh/naptha/tessdata@4.00_best/',
                     logger: m => {
                         if (m.status && m.progress !== undefined) {
                             if (m.status === 'loading tesseract core') {
