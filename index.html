@@ -24,7 +24,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assyrian Keyboard & PDF Workbench</title>
     <!-- Favicon link (replace your-favicon.png with your actual favicon path) -->
-    <link rel="icon" type="image/png" href="assyrian-text.png">
+    <link rel="icon" type="image/png" href="your-favicon.png">
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts for Syriac Scripts -->
@@ -349,6 +349,8 @@
         </div>
 
         <div class="mb-6">
+            <label for="assyrian-input" class="block text-lg font-medium mb-2">Type Assyrian Here:</label>
+            <textarea id="assyrian-input" class="input-area w-full focus:ring-blue-500 focus:border-blue-500 resize-y" placeholder="Start typing..." dir="rtl"></textarea>
             <button id="save-image-btn" class="mt-4 px-6 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700">Save Text as Image</button>
             <canvas id="output-canvas" style="display: none;"></canvas> <!-- Hidden canvas for drawing text to image -->
         </div>
@@ -365,9 +367,6 @@
         </div>
 
         <div class="mb-6">
-                        <label for="assyrian-input" class="block text-lg font-medium mb-2">Type Assyrian Here:</label>
-            <textarea id="assyrian-input" class="input-area w-full focus:ring-blue-500 focus:border-blue-500 resize-y" placeholder="Start typing..." dir="rtl"></textarea>
-
             <h2 class="text-xl font-semibold mb-3">Assyrian Keyboard:</h2>
             <div id="keyboard" class="section-background">
                 <!-- Keyboard buttons will be rendered here by JavaScript -->
@@ -531,24 +530,14 @@
 
             // Diacritics (using Shift + a key, or specific symbols/numbers)
             // Note: These mappings apply generally, and the virtual keyboard display filters.
-            'A': 'ܵ', // Shift+A for Zqapa (Madnhaya ā)
-            'S': 'ܲ', // Shift+S for Ptaha (Madnhaya ă)
-            'D': 'ܶ', // Shift+D for Rbasa (Common e/i)
-            'F': 'ܹ', // Shift+F for Rbasa Karyaha (Madnhaya ē)
-            'G': 'ܼ', // Shift+G for Hbasa/Hruca (Madnhaya i/u dot below)
-            'H': 'ܿ', // Shift+H for Esasa (Madnhaya o dot above)
-            'J': 'ܳ', // Shift+J for Estrangela Zqafa (classical o)
-            'X': 'ܰ', // Shift+X for Estrangela Pthaha (classical a)
-            'C': 'ܺ', // Shift+C for Estrangela Hbasa (classical i)
-            'V': 'ܽ', // Shift+V for Estrangela Esasa (classical u)
-            'K': '݂', // Shift+K for Qushaya (hard)
-            'L': '݄', // Shift+L for Rukkakha (soft)
+            'A': 'ܵ', 'S': 'ܲ', 'D': 'ܶ', 'F': 'ܹ', 'G': 'ܼ', 'H': 'ܿ',
+            'J': 'ܳ', 'X': 'ܰ', 'C': 'ܺ', 'V': 'ܽ',
+            'K': '݂', 'L': '݄', // Hard/soft marks for physical keyboard
 
             // Shift + Number mappings for diacritics/vowels (preferred for clarity)
-            '1': 'ܵ', // Shift+1 for Zqapa (Madnhaya ā)
-            '2': 'ܲ', '3': 'ܶ', '4': 'ܹ', '5': 'ܼ', '6': 'ܿ', '7': 'ܰ', '8': 'ܳ', '9': 'ܺ', '0': 'ܽ', // Shifted numbers to diacritics
-            '-': '݂', // Hyphen for Qushaya
-            '=': '݄' // Equals for Rukkakha
+            '1': 'ܵ', '2': 'ܲ', '3': 'ܶ', '4': 'ܹ', '5': 'ܼ', '6': 'ܿ', '7': 'ܰ', '8': 'ܳ', '9': 'ܺ', '0': 'ܽ',
+            '-': '݂',
+            '=': '݄'
         };
 
         // QWERTY keyboard rows for display on the virtual keyboard
@@ -735,11 +724,12 @@
                 AshurayaLetters.forEach(letter => {
                     const btn = document.createElement('button');
                     btn.classList.add('keyboard-btn');
-                    btn.classList.add(script + '-font');
+                    // Removed btn.classList.add(script + '-font'); from button itself to avoid conflict
+                    // Font is applied directly to topSpan now.
 
                     const topSpan = document.createElement('div');
                     topSpan.textContent = letter;
-                    topSpan.className = 'assyrian-letter';
+                    topSpan.className = 'assyrian-letter ' + script + '-font'; // Apply font class here
 
                     const bottomSpan = document.createElement('div');
                     bottomSpan.textContent = transliterationMap[letter] || '';
@@ -760,11 +750,11 @@
                 currentScriptVowelsAndDiacritics.forEach(char => {
                     const btn = document.createElement('button');
                     btn.classList.add('keyboard-btn');
-                    btn.classList.add(script + '-font');
+                    // Removed btn.classList.add(script + '-font');
 
                     const topSpan = document.createElement('div');
                     topSpan.textContent = char;
-                    topSpan.className = 'assyrian-letter';
+                    topSpan.className = 'assyrian-letter ' + script + '-font'; // Apply font class here
 
                     const bottomSpan = document.createElement('div');
                     bottomSpan.textContent = transliterationMap[char] || '';
