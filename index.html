@@ -728,68 +728,66 @@
                 });
                 keyboardDiv.appendChild(diacriticQwertyRowDiv);
 
-            } else { // Assyrian Letters layout
-                // Main Letters Row (RTL and bottom-to-top stacking)
-                const lettersRowDiv = document.createElement('div');
-                lettersRowDiv.classList.add('keyboard-row', 'rtl-flow');
-                AshurayaLetters.forEach(letter => {
-                    const btn = document.createElement('button');
-                    btn.classList.add('keyboard-btn');
-                    btn.classList.add(script + '-font');
+} else { // Assyrian Letters layout
+    // Main Letters Row (RTL and bottom-to-top stacking)
+    const lettersRowDiv = document.createElement('div');
+    lettersRowDiv.classList.add('keyboard-row', 'rtl-flow');
+    AshurayaLetters.forEach(letter => {
+        const btn = document.createElement('button');
+        btn.classList.add('keyboard-btn', script + '-font');
 
-                    const topSpan = document.createElement('div');
-                    topSpan.textContent = letter;
-                    topSpan.className = 'assyrian-letter';
+        const topSpan = document.createElement('div');
+        topSpan.textContent = letter;
+        topSpan.className = `assyrian-letter ${script}-font`;
 
-                    const bottomSpan = document.createElement('div');
-                    bottomSpan.textContent = transliterationMap[letter] || '';
-                    bottomSpan.className = 'latin-translit-label'; // Use latin-translit-label for consistency
+        const bottomSpan = document.createElement('div');
+        bottomSpan.textContent = transliterationMap[letter] || '';
+        bottomSpan.className = 'latin-translit-label';
 
-                    btn.appendChild(topSpan);
-                    btn.appendChild(bottomSpan);
-                    btn.onclick = () => insertAtCursor(letter, true);
-                    lettersRowDiv.appendChild(btn);
-                });
-                keyboardDiv.appendChild(lettersRowDiv);
+        btn.appendChild(topSpan);
+        btn.appendChild(bottomSpan);
+        btn.onclick = () => insertAtCursor(letter, true);
+        lettersRowDiv.appendChild(btn);
+    });
+    keyboardDiv.appendChild(lettersRowDiv);
 
-                // Diacritics Row (RTL and bottom-to-top stacking, on a new line)
-                const diacriticsRowDiv = document.createElement('div');
-                diacriticsRowDiv.classList.add('keyboard-row', 'rtl-flow', 'mt-2');
-                const currentScriptVowelsAndDiacritics = script === 'madnhaya' ? madnhayaVowelsAndDiacritics : estrangelaVowelsAndDiacritics;
+    // Diacritics Row (RTL and bottom-to-top stacking, on a new line)
+    const diacriticsRowDiv = document.createElement('div');
+    diacriticsRowDiv.classList.add('keyboard-row', 'rtl-flow', 'mt-2');
+    const currentScriptVowelsAndDiacritics = script === 'madnhaya' ? madnhayaVowelsAndDiacritics : estrangelaVowelsAndDiacritics;
 
-                currentScriptVowelsAndDiacritics.forEach(char => {
-                    const btn = document.createElement('button');
-                    btn.classList.add('keyboard-btn');
-                    btn.classList.add(script + '-font');
+    currentScriptVowelsAndDiacritics.forEach(char => {
+        const btn = document.createElement('button');
+        btn.classList.add('keyboard-btn', script + '-font');
 
-                    const topSpan = document.createElement('div');
-                    topSpan.textContent = char;
-                    topSpan.className = 'assyrian-letter';
+        const topSpan = document.createElement('div');
+        topSpan.textContent = char;
+        topSpan.className = `assyrian-letter ${script}-font`;
 
-                    const bottomSpan = document.createElement('div');
-                    bottomSpan.textContent = transliterationMap[char] || '';
-                    bottomSpan.className = 'latin-translit-label';
+        const bottomSpan = document.createElement('div');
+        bottomSpan.textContent = transliterationMap[char] || '';
+        bottomSpan.className = 'latin-translit-label';
 
-                    btn.appendChild(topSpan);
-                    btn.appendChild(bottomSpan);
+        btn.appendChild(topSpan);
+        btn.appendChild(bottomSpan);
 
-                    const isBase = false; // These are diacritics
-                    btn.onclick = () => insertAtCursor(char, isBase);
+        const isBase = false;
+        btn.onclick = () => insertAtCursor(char, isBase);
 
-                    // Apply disability conditionality
-                    const shouldEnable = canInsertDiacritic(char, currentInputValue, currentCursorPos);
-                    if (!shouldEnable) {
-                        btn.disabled = true;
-                        btn.classList.add('opacity-50', 'cursor-not-allowed');
-                    } else {
-                        btn.disabled = false;
-                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    }
+        // Apply disability conditionality
+        const shouldEnable = canInsertDiacritic(char, currentInputValue, currentCursorPos);
+        if (!shouldEnable) {
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
 
-                    diacriticsRowDiv.appendChild(btn);
-                });
-                keyboardDiv.appendChild(diacriticsRowDiv);
-            }
+        diacriticsRowDiv.appendChild(btn);
+    });
+    keyboardDiv.appendChild(diacriticsRowDiv);
+}
         }
 
         /**
